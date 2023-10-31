@@ -1,4 +1,4 @@
-# [Dataset description](https://www.kaggle.com/datasets/masoudnickparvar/brain-tumor-mri-dataset/data?select=Training):  
+# [Dataset description](https://www.kaggle.com/datasets/masoudnickparvar/brain-tumor-mri-dataset/data):  
 **Name: Brain Tumor MRI Dataset**  
 **License: CC0: Public Domain**  
 **Overall number of files: 7023**  
