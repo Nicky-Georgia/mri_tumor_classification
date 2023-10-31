@@ -50,7 +50,7 @@ Number of Class 4 files (Testing set): 300
 
 1. Preprocess MRI images using global histogram equalization.
 2. Extract features using a robust technique based on symlet wavelet transform, handling various grayscale image features effectively.
-3. Reduce feature space dimensions using linear discriminant analysis (LDA).
+3. Reduce feature space dimensions using linear discriminant analysis (LDA). Rely on data research, LDA is the most effective method to identify the most significant features that contribute to the classification of brain diseases, including tumors.
 4. Train the model using logistic regression, utilizing LDA coefficients to determine important characteristics for tumor classification.
 5. Evaluate performance by conducting experiments with the Kaggle brain MRI dataset.
 
