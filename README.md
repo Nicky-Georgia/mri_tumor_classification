@@ -44,7 +44,7 @@ Number of Class 4 files (Testing set): 300
 
 
 
-## Pjoects Stages
+## Pjoect Stages
 
 ### Main steps
 
