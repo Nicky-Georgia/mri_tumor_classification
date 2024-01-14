@@ -1,6 +1,8 @@
 # mri_tumor_classification
 First year project on MRI tumor classification. The Facualty of Computer Science HSE University, "Machine Learning and Data-Intensive systems".
 
+![Alt Text](https://github.com/Nicky-Georgia/mri_tumor_classification/blob/main/gif_bot.gif)
+
 ## [Dataset description](https://www.kaggle.com/datasets/masoudnickparvar/brain-tumor-mri-dataset/data):  
 **Name: Brain Tumor MRI Dataset**  
 **License: CC0: Public Domain**  
