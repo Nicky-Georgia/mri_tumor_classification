@@ -41,8 +41,6 @@ class Bot:
                        timeout: int = 30,
                        chunk_size: int = 65536,
                        seek: bool = True) -> Union[BinaryIO, None]:
-        # Your implementation here
-        # Make sure to adjust the logic according to your needs
         pass
 
 
