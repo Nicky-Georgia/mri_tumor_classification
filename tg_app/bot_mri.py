@@ -10,18 +10,9 @@ from pathlib import Path
 import tensorflow as tf
 from tensorflow.keras.models import load_model
 
-from tensorflow import keras
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Conv2D , MaxPooling2D , Flatten , Activation , Dense , Dropout , BatchNormalization
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
-from tensorflow.keras.optimizers import Adam , Adamax
-from tensorflow.keras import regularizers
-
-
-
 
 load_dotenv()
-loaded_model = load_model('my_model.h5')
+loaded_model = load_model('main_model.h5')
 TOKEN = os.environ.get('TELEGRAM_TOKEN')
 img_size = (224 ,244)
 image_path = 'brain1.jpeg'
@@ -74,8 +65,6 @@ def one_photo_predict(image_path: str, img_size: tuple, loaded_model):
     predicted_class_literal = class_dict_local[predicted_class.numpy()[0]]
     return f'The predicted class is: {predicted_class_literal}'
 
-#async def show_predict():
-    #await one_photo_predict(image_path, img_size, loaded_model)
 
 dp.message.register(process_start_command, Command(commands='start'))
 dp.message.register(process_help_command, Command(commands='help'))
