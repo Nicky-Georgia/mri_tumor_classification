@@ -37,11 +37,11 @@ class Bot:
 
 async def process_start_command(message: Message):
     await message.answer(
-        '''Привет!\nДанный бот создан для предсказания типа опухоли головного мозга на основе МРТ.\nПожалуйста, загрузи снимок''')
+        '''Привет!\nДанный бот создан для предсказания типа опухоли головного мозга на основе МРТ.\nПожалуйста, загрузи снимок.''')
 
 
 async def process_help_command(message: Message):
-    await message.answer('Загрузи снимок МРТ головного мозга для оценки наличия опухоли')
+    await message.answer('Загрузи снимок МРТ головного мозга для оценки наличия опухоли.')
 
 
 async def reply(message: types.Message):
@@ -61,9 +61,12 @@ def one_photo_predict(image_path: str, img_size: tuple, loaded_model):
     predictions = loaded_model.predict(image)
     # Get the index of the highest probability class
     predicted_class = tf.math.argmax(predictions, axis=1)
-    class_dict_local = {0: 'glioma', 1: 'meningioma', 2: 'notumor', 3: 'pituitary'}
+    class_dict_local = {0: 'Пердсказанный тип опухоли: Глиома',
+                        1: 'Пердсказанный тип опухоли: Менингиома',
+                        2: 'Опухоль моделью не обнаружена',
+                        3: 'Пердсказанный тип опухоли: Опухоль гипофиза'}
     predicted_class_literal = class_dict_local[predicted_class.numpy()[0]]
-    return f'The predicted class is: {predicted_class_literal}'
+    return f'{predicted_class_literal}'
 
 
 dp.message.register(process_start_command, Command(commands='start'))
