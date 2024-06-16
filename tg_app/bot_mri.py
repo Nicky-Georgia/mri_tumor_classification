@@ -5,39 +5,32 @@ import logging
 import asyncio
 import os
 from dotenv import load_dotenv
-from typing import BinaryIO, Union
-from pathlib import Path
-import tensorflow as tf
-from tensorflow.keras.models import load_model
+import torch
+import torchvision.transforms as transforms
+from PIL import Image
+import torch.nn as nn
+from efficientnet_pytorch import EfficientNet
 
-
+# Load environment variables
 load_dotenv()
-loaded_model = load_model('main_model.h5')
+
 TOKEN = os.environ.get('TELEGRAM_TOKEN')
-img_size = (224 ,244)
-image_path = 'brain1.jpeg'
+img_size = (224, 224)
 
 if TOKEN is None:
     print("Error: Bot token is not set. Please check your .env file.")
     exit()
 
+# Initialize bot and dispatcher
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
-
-class Bot:
-    @staticmethod
-    async def download(file: Union[str, 'Downloadable'],
-                       destination: Union[BinaryIO, Path, str, None] = None,
-                       timeout: int = 30,
-                       chunk_size: int = 65536,
-                       seek: bool = True) -> Union[BinaryIO, None]:
-        pass
-
+image_counter = 1
 
 async def process_start_command(message: Message):
     await message.answer(
-        '''Привет!\nДанный бот создан для предсказания типа опухоли головного мозга на основе МРТ.\nПожалуйста, загрузи снимок.''')
+        '''Привет!\nДанный бот создан для предсказания типа опухоли головного мозга на основе МРТ.\nПожалуйста, загрузи снимок.'''
+    )
 
 
 async def process_help_command(message: Message):
@@ -47,28 +40,70 @@ async def process_help_command(message: Message):
 async def reply(message: types.Message):
     await message.reply('Пожалуйста, загрузи снимок МРТ')
 
-
 async def photo(message: types.Message):
-    await message.bot.download(file=message.photo[-1].file_id, destination='brain_MRI.jpg')
-    await message.answer(one_photo_predict('brain_MRI.jpg', img_size, loaded_model))
+    global image_counter
+    image_filename = f'brain_MRI_{image_counter}.jpg'
+    await message.bot.download(file=message.photo[-1].file_id, destination=image_filename)
+    prediction = await one_photo_predict(image_filename, img_size, model)  # Await the coroutine
+    await message.answer(prediction)
+    os.remove(image_filename)
+    image_counter += 1
+
+class CustomEfficientNetB3(nn.Module):
+    def __init__(self, num_classes):
+        super(CustomEfficientNetB3, self).__init__()
+        self.base_model = EfficientNet.from_pretrained('efficientnet-b3')
+        self.pooling = nn.AdaptiveMaxPool2d(1)
+        self.bn = nn.BatchNorm1d(self.base_model._fc.in_features, momentum=0.99, eps=0.001)
+        self.fc1 = nn.Linear(self.base_model._fc.in_features, 256)
+        self.relu = nn.ReLU()
+        self.dropout = nn.Dropout(p=0.4)
+        self.fc2 = nn.Linear(256, num_classes)
+        
+    def forward(self, x):
+        x = self.base_model.extract_features(x)
+        x = self.pooling(x).squeeze(-1).squeeze(-1)
+        x = self.bn(x)
+        x = self.fc1(x)
+        x = self.relu(x)
+        x = self.dropout(x)
+        x = self.fc2(x)
+        return x
+
+num_classes = 4  
+model = CustomEfficientNetB3(num_classes)
+model.load_state_dict(torch.load('tg_app/model_pytorch.pth'))
 
 
-def one_photo_predict(image_path: str, img_size: tuple, loaded_model):
-    image = tf.keras.utils.load_img(image_path, target_size=(img_size[0], img_size[1]))
-    image = tf.keras.utils.img_to_array(image)
-    image = tf.expand_dims(image, axis=0)
-    image = tf.keras.applications.efficientnet.preprocess_input(image)
-    predictions = loaded_model.predict(image)
-    # Get the index of the highest probability class
-    predicted_class = tf.math.argmax(predictions, axis=1)
-    class_dict_local = {0: 'Пердсказанный тип опухоли: Глиома',
-                        1: 'Пердсказанный тип опухоли: Менингиома',
-                        2: 'Опухоль моделью не обнаружена',
-                        3: 'Пердсказанный тип опухоли: Опухоль гипофиза'}
-    predicted_class_literal = class_dict_local[predicted_class.numpy()[0]]
+async def one_photo_predict(image_path: str, img_size: tuple, model):
+
+    image = Image.open(image_path).convert('RGB')
+
+    transform = transforms.Compose([
+                transforms.Resize(img_size),
+                transforms.ToTensor(),
+                ])
+    
+    image = transform(image).unsqueeze(0)  # Add batch dimension
+
+    model.eval()
+    with torch.no_grad():
+        predictions = model(image)
+    
+    # Get the class with the highest probability
+    predicted_class = torch.argmax(predictions, dim=1)
+
+    class_dict_local = {
+        0: 'Предсказанный тип опухоли: Опухоль гипофиза',
+        1: 'Опухоль моделью не обнаружена',
+        2: 'Предсказанный тип опухоли: Менингиома',
+        3: 'Предсказанный тип опухоли: Глиома'
+    }
+    
+    predicted_class_literal = class_dict_local[predicted_class.item()]
     return f'{predicted_class_literal}'
 
-
+# Register handlers
 dp.message.register(process_start_command, Command(commands='start'))
 dp.message.register(process_help_command, Command(commands='help'))
 dp.message.register(photo, F.photo)
